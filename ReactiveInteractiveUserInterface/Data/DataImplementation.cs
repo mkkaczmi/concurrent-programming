@@ -9,104 +9,40 @@
 //_____________________________________________________________________________________________________________________________________
 
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 
-namespace TP.ConcurrentProgramming.Data
+namespace TP.ConcurrentProgramming.Data.Impl        // ❶ warstwa implementacyjna
 {
-  internal class DataImplementation : DataAbstractAPI
-  {
-    #region ctor
-
-    public DataImplementation()
+    /// <summary>
+    /// Prosta, pamięciowa implementacja warstwy danych – przechowuje listę kul.
+    /// Nie ma timera ani logiki ruchu; tę przejmie Business Logic.
+    /// </summary>
+    internal sealed class DataLayer : DataAbstractAPI
     {
-      MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
-    }
-
-    #endregion ctor
-
-    #region DataAbstractAPI
-
-    public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
-    {
-      if (Disposed)
-        throw new ObjectDisposedException(nameof(DataImplementation));
-      if (upperLayerHandler == null)
-        throw new ArgumentNullException(nameof(upperLayerHandler));
-      Random random = new Random();
-      for (int i = 0; i < numberOfBalls; i++)
-      {
-        Vector startingPosition = new(random.Next(100, 400 - 100), random.Next(100, 400 - 100));
-        Ball newBall = new(startingPosition, startingPosition);
-        upperLayerHandler(startingPosition, newBall);
-        BallsList.Add(newBall);
-      }
-    }
-
-    #endregion DataAbstractAPI
-
-    #region IDisposable
-
-    protected virtual void Dispose(bool disposing)
-    {
-      if (!Disposed)
-      {
-        if (disposing)
+        /* ----------  ctor  ---------- */
+        internal DataLayer(double width, double height)
         {
-          MoveTimer.Dispose();
-          BallsList.Clear();
+            _width = width;
+            _height = height;
         }
-        Disposed = true;
-      }
-      else
-        throw new ObjectDisposedException(nameof(DataImplementation));
+
+        /* ----------  DataAbstractAPI ---------- */
+        public override IReadOnlyList<IBall> CreateBalls(int count, double radius)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                var x = _rng.NextDouble() * (_width - 2 * radius) + radius;
+                var y = _rng.NextDouble() * (_height - 2 * radius) + radius;
+                _balls.Add(new Ball(Guid.NewGuid(), x, y, radius));     // ❷ nowy konstruktor
+            }
+            return _balls.AsReadOnly();
+        }
+
+        public override IReadOnlyList<IBall> GetBalls() => _balls.AsReadOnly();
+
+        /* ----------  pola prywatne ---------- */
+        private readonly double _width, _height;
+        private readonly Random _rng = new();
+        private readonly List<IBall> _balls = new();
     }
-
-    public override void Dispose()
-    {
-      // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-      Dispose(disposing: true);
-      GC.SuppressFinalize(this);
-    }
-
-    #endregion IDisposable
-
-    #region private
-
-    //private bool disposedValue;
-    private bool Disposed = false;
-
-    private readonly Timer MoveTimer;
-    private Random RandomGenerator = new();
-    private List<Ball> BallsList = [];
-
-    private void Move(object? x)
-    {
-      foreach (Ball item in BallsList)
-        item.Move(new Vector((RandomGenerator.NextDouble() - 0.5) * 10, (RandomGenerator.NextDouble() - 0.5) * 10));
-    }
-
-    #endregion private
-
-    #region TestingInfrastructure
-
-    [Conditional("DEBUG")]
-    internal void CheckBallsList(Action<IEnumerable<IBall>> returnBallsList)
-    {
-      returnBallsList(BallsList);
-    }
-
-    [Conditional("DEBUG")]
-    internal void CheckNumberOfBalls(Action<int> returnNumberOfBalls)
-    {
-      returnNumberOfBalls(BallsList.Count);
-    }
-
-    [Conditional("DEBUG")]
-    internal void CheckObjectDisposed(Action<bool> returnInstanceDisposed)
-    {
-      returnInstanceDisposed(Disposed);
-    }
-
-    #endregion TestingInfrastructure
-  }
 }

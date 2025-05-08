@@ -8,55 +8,41 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System;
+using System.Collections.Generic;
+
 namespace TP.ConcurrentProgramming.Data
 {
-  public abstract class DataAbstractAPI : IDisposable
-  {
-    #region Layer Factory
-
-    public static DataAbstractAPI GetDataLayer()
+    /// <summary>
+    /// Abstrakcyjny kontrakt warstwy danych.
+    /// Przechowuje wyłącznie stan kul – bez logiki ruchu, timerów, IO czy baz danych.
+    /// </summary>
+    public abstract class DataAbstractAPI
     {
-      return modelInstance.Value;
+        /* ----------  FABRYKA  ---------- */
+        /// <summary>Tworzy domyślną implementację <see cref="DataLayer"/>.</summary>
+        public static DataAbstractAPI Create(double boardWidth = 600, double boardHeight = 400)
+          => new Impl.DataLayer(boardWidth, boardHeight);
+
+        /* ----------  PUBLIC API  ---------- */
+        /// <summary>Generuje <paramref name="count"/> nowych kul o promieniu <paramref name="radius"/>.</summary>
+        public abstract IReadOnlyList<IBall> CreateBalls(int count, double radius);
+
+        /// <summary>Zwraca migawkę wszystkich kul aktualnie przechowywanych w warstwie danych.</summary>
+        public abstract IReadOnlyList<IBall> GetBalls();
     }
 
-    #endregion Layer Factory
+    /* ===================================================================== */
 
-    #region public API
+    /// <summary>Językowa reprezentacja kuli – wykorzystywana przez wyższe warstwy.</summary>
+    public interface IBall
+    {
+        Guid Id { get; }
+        double X { get; }
+        double Y { get; }
+        double Radius { get; }
 
-    public abstract void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler);
-
-    #endregion public API
-
-    #region IDisposable
-
-    public abstract void Dispose();
-
-    #endregion IDisposable
-
-    #region private
-
-    private static Lazy<DataAbstractAPI> modelInstance = new Lazy<DataAbstractAPI>(() => new DataImplementation());
-
-    #endregion private
-  }
-
-  public interface IVector
-  {
-    /// <summary>
-    /// The X component of the vector.
-    /// </summary>
-    double x { get; init; }
-
-    /// <summary>
-    /// The y component of the vector.
-    /// </summary>
-    double y { get; init; }
-  }
-
-  public interface IBall
-  {
-    event EventHandler<IVector> NewPositionNotification;
-
-    IVector Velocity { get; set; }
-  }
+        /// <summary>Zdarzenie wysyłane, gdy kula zmieni pozycję.</summary>
+        event EventHandler<BallMovedEventArgs>? NewPositionNotification;
+    }
 }

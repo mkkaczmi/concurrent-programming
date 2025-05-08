@@ -1,69 +1,48 @@
-﻿//____________________________________________________________________________________________________________________________________
+﻿//__________________________________________________________________________________________
 //
-//  Copyright (C) 2024, Mariusz Postol LODZ POLAND.
+//  Copyright 2024 Mariusz Postol LODZ POLAND.
 //
-//  To be in touch join the community by pressing the `Watch` button and get started commenting using the discussion panel at
-//
+//  To be in touch join the community by pressing the `Watch` button and to get started
+//  comment using the discussion panel at
 //  https://github.com/mpostol/TP/discussions/182
-//
-//_____________________________________________________________________________________________________________________________________
+//__________________________________________________________________________________________
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TP.ConcurrentProgramming.Data;
 
 namespace TP.ConcurrentProgramming.Data.Test
 {
-  [TestClass]
-  public class DataImplementationUnitTest
-  {
-    [TestMethod]
-    public void ConstructorTestMethod()
+    [TestClass]
+    public sealed class DataLayerUnitTest
     {
-      using (DataImplementation newInstance = new DataImplementation())
-      {
-        IEnumerable<IBall>? ballsList = null;
-        newInstance.CheckBallsList(x => ballsList = x);
-        Assert.IsNotNull(ballsList);
-        int numberOfBalls = 0;
-        newInstance.CheckNumberOfBalls(x => numberOfBalls = x);
-        Assert.AreEqual<int>(0, numberOfBalls);
-      }
-    }
+        /* ======================================================================
+           1.  CreateBalls zwraca żądaną liczbę obiektów IBall
+           ====================================================================== */
+        [TestMethod]
+        public void CreateBalls_ReturnsRequestedCount()
+        {
+            var data = DataAbstractAPI.Create(100, 100);
+            var balls = data.CreateBalls(5, radius: 10);
 
-    [TestMethod]
-    public void DisposeTestMethod()
-    {
-      DataImplementation newInstance = new DataImplementation();
-      bool newInstanceDisposed = false;
-      newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
-      Assert.IsFalse(newInstanceDisposed);
-      newInstance.Dispose();
-      newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
-      Assert.IsTrue(newInstanceDisposed);
-      IEnumerable<IBall>? ballsList = null;
-      newInstance.CheckBallsList(x => ballsList = x);
-      Assert.IsNotNull(ballsList);
-      newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(0, x));
-      Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Dispose());
-      Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }));
-    }
+            Assert.AreEqual(5, balls.Count);
+        }
 
-    [TestMethod]
-    public void StartTestMethod()
-    {
-      using (DataImplementation newInstance = new DataImplementation())
-      {
-        int numberOfCallbackInvoked = 0;
-        int numberOfBalls2Create = 10;
-        newInstance.Start(
-          numberOfBalls2Create,
-          (startingPosition, ball) =>
-          {
-            numberOfCallbackInvoked++;
-            Assert.IsTrue(startingPosition.x >= 0);
-            Assert.IsTrue(startingPosition.y >= 0);
-            Assert.IsNotNull(ball);
-          });
-        Assert.AreEqual<int>(numberOfBalls2Create, numberOfCallbackInvoked);
-        newInstance.CheckNumberOfBalls(x => Assert.AreEqual<int>(10, x));
-      }
+        /* ======================================================================
+           2.  Współrzędne kul mieszczą się w granicach planszy
+           ====================================================================== */
+        [TestMethod]
+        public void Balls_AreInsideBoard()
+        {
+            const double W = 200, H = 150, R = 5;
+
+            var data = DataAbstractAPI.Create(W, H);
+            var balls = data.CreateBalls(50, R);
+
+            foreach (var b in balls)
+            {
+                Assert.IsTrue(b.X >= R && b.X <= W - R, "Ball outside X range");
+                Assert.IsTrue(b.Y >= R && b.Y <= H - R, "Ball outside Y range");
+            }
+        }
     }
-  }
 }

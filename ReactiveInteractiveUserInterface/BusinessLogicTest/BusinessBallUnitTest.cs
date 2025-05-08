@@ -24,31 +24,36 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
       Assert.AreEqual<int>(1, numberOfCallBackCalled);
     }
 
-    #region testing instrumentation
+        #region testing instrumentation
 
-    private class DataBallFixture : Data.IBall
-    {
-      public Data.IVector Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private sealed class DataBallFixture : Data.IBall
+        {
+            public DataBallFixture(double x = 0, double y = 0, double r = 10)
+            {
+                Id = Guid.NewGuid();
+                X = x;
+                Y = y;
+                Radius = r;
+            }
 
-      public event EventHandler<Data.IVector>? NewPositionNotification;
+            /* ----------  IBall ---------- */
+            public Guid Id { get; }
+            public double X { get; private set; }
+            public double Y { get; private set; }
+            public double Radius { get; }
 
-      internal void Move()
-      {
-        NewPositionNotification?.Invoke(this, new VectorFixture(0.0, 0.0));
-      }
-    }
+            public event EventHandler<Data.BallMovedEventArgs>? NewPositionNotification;
 
-    private class VectorFixture : Data.IVector
-    {
-      internal VectorFixture(double X, double Y)
-      {
-        x = X; y = Y;
-      }
-
-      public double x { get; init; }
-      public double y { get; init; }
-    }
-
+            /* ----------  helpers used in tests ---------- */
+            internal void Move(double dx, double dy)
+            {
+                X += dx;
+                Y += dy;
+                NewPositionNotification?.Invoke(
+                    this,
+                    new Data.BallMovedEventArgs(Id, X, Y));
+            }
+        }
     #endregion testing instrumentation
   }
 }

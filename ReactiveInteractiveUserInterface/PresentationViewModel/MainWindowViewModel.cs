@@ -8,77 +8,32 @@
 //__________________________________________________________________________________________
 
 using System;
-using System.Collections.ObjectModel;
-using TP.ConcurrentProgramming.Presentation.Model;
-using TP.ConcurrentProgramming.Presentation.ViewModel.MVVMLight;
-using ModelIBall = TP.ConcurrentProgramming.Presentation.Model.IBall;
+using TP.ConcurrentProgramming.BusinessLogic;
 
 namespace TP.ConcurrentProgramming.Presentation.ViewModel
 {
-  public class MainWindowViewModel : ViewModelBase, IDisposable
-  {
-    #region ctor
-
-    public MainWindowViewModel() : this(null)
-    { }
-
-    internal MainWindowViewModel(ModelAbstractApi modelLayerAPI)
+    /// <summary>
+    /// Najprostszy ViewModel okna głównego – uruchamia i zatrzymuje symulację kul.
+    /// W kolejnych etapach możesz tu dodać właściwości, komendy, kolekcję kul itp.
+    /// </summary>
+    public sealed class MainWindowViewModel : IDisposable
     {
-      ModelLayer = modelLayerAPI == null ? ModelAbstractApi.CreateModel() : modelLayerAPI;
-      Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
+        /* ----------  konstruktor  ---------- */
+
+        private readonly BusinessLogicAbstractAPI _logic = BusinessLogicAbstractAPI.Create();
+
+        /* ----------  API dla View  ---------- */
+
+        /// <summary>Rozpoczyna symulację z <paramref name="balls"/> kulami.</summary>
+        public void Start(int balls, double radius = 10) =>
+          _logic.StartSimulation(balls, radius);
+
+        /// <summary>Zatrzymuje timer logiki.</summary>
+        public void Stop() =>
+          _logic.StopSimulation();
+
+        /* ----------  IDisposable  ---------- */
+
+        public void Dispose() => Stop();
     }
-
-    #endregion ctor
-
-    #region public API
-
-    public void Start(int numberOfBalls)
-    {
-      if (Disposed)
-        throw new ObjectDisposedException(nameof(MainWindowViewModel));
-      ModelLayer.Start(numberOfBalls);
-      Observer.Dispose();
-    }
-
-    public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
-
-    #endregion public API
-
-    #region IDisposable
-
-    protected virtual void Dispose(bool disposing)
-    {
-      if (!Disposed)
-      {
-        if (disposing)
-        {
-          Balls.Clear();
-          Observer.Dispose();
-          ModelLayer.Dispose();
-        }
-
-        // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-        // TODO: set large fields to null
-        Disposed = true;
-      }
-    }
-
-    public void Dispose()
-    {
-      if (Disposed)
-        throw new ObjectDisposedException(nameof(MainWindowViewModel));
-      Dispose(disposing: true);
-      GC.SuppressFinalize(this);
-    }
-
-    #endregion IDisposable
-
-    #region private
-
-    private IDisposable Observer = null;
-    private ModelAbstractApi ModelLayer;
-    private bool Disposed = false;
-
-    #endregion private
-  }
 }

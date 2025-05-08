@@ -8,43 +8,46 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
-namespace TP.ConcurrentProgramming.Data
+using System;
+
+namespace TP.ConcurrentProgramming.Data.Impl      // warstwa implementacyjna
 {
-  internal class Ball : IBall
-  {
-    #region ctor
-
-    internal Ball(Vector initialPosition, Vector initialVelocity)
+    /// <summary>
+    /// Reprezentacja pojedynczej kuli znajdującej się na planszy.
+    /// Klasa jest hermetyczna (sealed) i spełnia abstrakcyjny kontrakt <see cref="IBall"/>.
+    /// </summary>
+    internal sealed class Ball : IBall
     {
-      Position = initialPosition;
-      Velocity = initialVelocity;
+        /* ----------  ctor  ---------- */
+        internal Ball(Guid id, double x, double y, double radius)
+        {
+            Id = id;
+            X = x;
+            Y = y;
+            Radius = radius;
+        }
+
+        /* ----------  IBall ---------- */
+        public Guid Id { get; }
+        public double X { get; private set; }
+        public double Y { get; private set; }
+        public double Radius { get; }
+
+        public event EventHandler<BallMovedEventArgs>? NewPositionNotification;
+
+        /* ----------  public API ---------- */
+        /// <summary>
+        /// Przesuwa kulę o <paramref name="dx"/>, <paramref name="dy"/> i publikuje zdarzenie z nową pozycją.
+        /// </summary>
+        internal void Move(double dx, double dy)
+        {
+            X += dx;
+            Y += dy;
+            RaiseNewPositionNotification();
+        }
+
+        /* ----------  helpers ---------- */
+        private void RaiseNewPositionNotification()
+          => NewPositionNotification?.Invoke(this, new BallMovedEventArgs(Id, X, Y));
     }
-
-    #endregion ctor
-
-    #region IBall
-
-    public event EventHandler<IVector>? NewPositionNotification;
-
-    public IVector Velocity { get; set; }
-
-    #endregion IBall
-
-    #region private
-
-    private Vector Position;
-
-    private void RaiseNewPositionChangeNotification()
-    {
-      NewPositionNotification?.Invoke(this, Position);
-    }
-
-    internal void Move(Vector delta)
-    {
-      Position = new Vector(Position.x + delta.x, Position.y + delta.y);
-      RaiseNewPositionChangeNotification();
-    }
-
-    #endregion private
-  }
 }
