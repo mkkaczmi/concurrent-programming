@@ -34,13 +34,13 @@ namespace TP.ConcurrentProgramming.Data
                 throw new ArgumentNullException(nameof(upperLayerHandler));
 
             // Ensure the timer is running
-            MoveTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+            MoveTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(50));
 
             Random random = new Random();
             for (int i = 0; i < numberOfBalls; i++)
             {
                 IVector startingPosition = new Vector(random.Next(0, (int)GetDimensions.TableWidth), random.Next(0, (int)GetDimensions.TableHeight));
-                IVector initialVelocity = new Vector(random.NextDouble() * 2 - 1, random.NextDouble() * 2 - 1);
+                IVector initialVelocity = new Vector((random.NextDouble() * 4 - 2) * 2, (random.NextDouble() * 4 - 2) * 2);
                 IBall ball = new Ball(startingPosition, initialVelocity);
                 BallsList.Add((Ball)ball);
                 upperLayerHandler(startingPosition, ball);
@@ -53,6 +53,12 @@ namespace TP.ConcurrentProgramming.Data
                 throw new ObjectDisposedException(nameof(DataImplementation));
             MoveTimer.Change(Timeout.Infinite, Timeout.Infinite);
             BallsList.Clear();
+        }
+
+        public override void UpdateBoxDimensions(double width, double height)
+        {
+            boxWidth = width;
+            boxHeight = height;
         }
 
         #endregion DataAbstractAPI
@@ -91,27 +97,50 @@ namespace TP.ConcurrentProgramming.Data
         private readonly Timer MoveTimer;
         private Random RandomGenerator = new();
         private List<Ball> BallsList = [];
+        private double boxWidth = 400;
+        private double boxHeight = 400;
 
         private void Move(object? x)
         {
             foreach (Ball item in BallsList)
             {
-                // Generate random movement within bounds
-                double deltaX = (RandomGenerator.NextDouble() - 0.5) * 10;
-                double deltaY = (RandomGenerator.NextDouble() - 0.5) * 10;
-
-                // Get current position
-                Vector currentPos = (Vector)item.Velocity;
+                // Get current position and velocity
+                Vector currentPos = (Vector)item.Position;
+                Vector currentVel = (Vector)item.Velocity;
 
                 // Calculate new position
-                double newX = currentPos.x + deltaX;
-                double newY = currentPos.y + deltaY;
+                double newX = currentPos.x + currentVel.x;
+                double newY = currentPos.y + currentVel.y;
 
-                // Ensure the ball stays within the confined area (400x400)
-                newX = Math.Max(0, Math.Min(400 - 20, newX)); // 20 is the ball diameter
-                newY = Math.Max(0, Math.Min(400 - 20, newY));
+                // Handle collisions with walls
+                // Left wall collision
+                if (newX < 0)
+                {
+                    currentVel = new Vector(Math.Abs(currentVel.x), currentVel.y);
+                    newX = 0;
+                }
+                // Right wall collision
+                else if (newX + GetDimensions.BallDimension > boxWidth - 8) // Account for border thickness
+                {
+                    currentVel = new Vector(-Math.Abs(currentVel.x), currentVel.y);
+                    newX = boxWidth - GetDimensions.BallDimension - 8; // Account for border thickness
+                }
 
-                // Move the ball
+                // Top wall collision
+                if (newY < 0)
+                {
+                    currentVel = new Vector(currentVel.x, Math.Abs(currentVel.y));
+                    newY = 0;
+                }
+                // Bottom wall collision
+                else if (newY + GetDimensions.BallDimension > boxHeight - 8) // Account for border thickness
+                {
+                    currentVel = new Vector(currentVel.x, -Math.Abs(currentVel.y));
+                    newY = boxHeight - GetDimensions.BallDimension - 8; // Account for border thickness
+                }
+
+                // Update velocity and move the ball
+                item.Velocity = currentVel;
                 item.Move(new Vector(newX - currentPos.x, newY - currentPos.y));
             }
         }

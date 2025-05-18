@@ -34,6 +34,8 @@ namespace TP.ConcurrentProgramming.Data
             set => velocity = value;
         }
 
+        public IVector Position => position;
+
         #endregion IBall
 
         #region private
@@ -49,7 +51,6 @@ namespace TP.ConcurrentProgramming.Data
         internal void Move(IVector delta)
         {
             position = new Vector(position.x + delta.x, position.y + delta.y);
-            velocity = position; // Update velocity to match position for boundary checking
             RaiseNewPositionChangeNotification();
         }
 

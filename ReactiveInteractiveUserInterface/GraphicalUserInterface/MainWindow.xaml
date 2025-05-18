@@ -4,11 +4,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:TP.ConcurrentProgramming.Presentation.ViewModel;assembly=TP.ConcurrentProgramming.PresentationViewModel"
+        xmlns:converters="clr-namespace:TP.ConcurrentProgramming.GraphicalUserInterface.Converters"
         mc:Ignorable="d"
         Title="Presentation layer targeting reactive behaviour" Height="auto" Width="auto">
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
+    <Window.Resources>
+        <converters:HeightConverter x:Key="HeightConverter"/>
+        <converters:WidthConverter x:Key="WidthConverter"/>
+    </Window.Resources>
     <StackPanel Margin="10">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Number of Balls:" VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -16,7 +21,9 @@
             <Button Content="Start" Command="{Binding StartCommand}" CommandParameter="{Binding Text, ElementName=BallCountTextBox}" Padding="10,5" Margin="0,0,10,0"/>
             <Button Content="Stop" Command="{Binding StopCommand}" Padding="10,5"/>
         </StackPanel>
-        <Border BorderThickness="4" BorderBrush="Green" Height="420" Width="400">
+        <Border BorderThickness="4" BorderBrush="Green" 
+                Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource HeightConverter}}"
+                Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource WidthConverter}}">
             <ItemsControl ItemsSource="{Binding Balls}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

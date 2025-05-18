@@ -10,6 +10,7 @@
 using System;
 using System.Windows;
 using TP.ConcurrentProgramming.Presentation.ViewModel;
+using TP.ConcurrentProgramming.Data;
 
 namespace TP.ConcurrentProgramming.PresentationView
 {
@@ -21,6 +22,16 @@ namespace TP.ConcurrentProgramming.PresentationView
     public MainWindow()
     {
       InitializeComponent();
+      SizeChanged += MainWindow_SizeChanged;
+    }
+
+    private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+      // Update box dimensions when window is resized
+      // Leave some margin for the border
+      double boxWidth = Math.Max(100, e.NewSize.Width - 40);
+      double boxHeight = Math.Max(100, e.NewSize.Height - 100);
+      DataAbstractAPI.GetDataLayer().UpdateBoxDimensions(boxWidth, boxHeight);
     }
 
     /// <summary>

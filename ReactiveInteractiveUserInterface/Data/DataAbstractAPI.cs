@@ -29,6 +29,8 @@ namespace TP.ConcurrentProgramming.Data
 
     public abstract void Stop();
 
+    public abstract void UpdateBoxDimensions(double width, double height);
+
     #endregion public API
 
     #region IDisposable
@@ -64,5 +66,6 @@ namespace TP.ConcurrentProgramming.Data
     event EventHandler<IVector> NewPositionNotification;
 
     IVector Velocity { get; set; }
+    IVector Position { get; }
   }
 }
