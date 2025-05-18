@@ -71,6 +71,16 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
       {
         throw new NotImplementedException();
       }
+
+      public override void Stop()
+      {
+        throw new NotImplementedException();
+      }
+
+      public override void UpdateBoxDimensions(double width, double height)
+      {
+        throw new NotImplementedException();
+      }
     }
 
     private class DataLayerDisposeFixcure : Data.DataAbstractAPI
@@ -83,6 +93,16 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
       }
 
       public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
+      {
+        throw new NotImplementedException();
+      }
+
+      public override void Stop()
+      {
+        throw new NotImplementedException();
+      }
+
+      public override void UpdateBoxDimensions(double width, double height)
       {
         throw new NotImplementedException();
       }
@@ -103,6 +123,16 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
         upperLayerHandler(new DataVectorFixture(), new DataBallFixture());
       }
 
+      public override void Stop()
+      {
+        throw new NotImplementedException();
+      }
+
+      public override void UpdateBoxDimensions(double width, double height)
+      {
+        throw new NotImplementedException();
+      }
+
       private record DataVectorFixture : Data.IVector
       {
         public double x { get; init; }
@@ -112,6 +142,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
       private class DataBallFixture : Data.IBall
       {
         public IVector Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IVector Position => new DataVectorFixture { x = 0, y = 0 };
 
         public event EventHandler<IVector>? NewPositionNotification = null;
       }

@@ -80,6 +80,11 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
         Started = numberOfBalls;
       }
 
+      public override void Stop()
+      {
+        // No-op for null fixture
+      }
+
       public override IDisposable Subscribe(IObserver<ModelIBall> observer)
       {
         Subscribed++;
@@ -130,6 +135,11 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
           ModelBall newBall = new ModelBall(0, 0) { };
           BallChanged?.Invoke(this, new BallChaneEventArgs() { Ball = newBall });
         }
+      }
+
+      public override void Stop()
+      {
+        // No-op for simulator fixture
       }
 
       public override void Dispose()

@@ -37,5 +37,19 @@ namespace TP.ConcurrentProgramming.Data
       this.x = x;
       this.y = y;
     }
+
+    public override bool Equals(object? obj)
+    {
+      if (obj is Vector other)
+      {
+        return x == other.x && y == other.y;
+      }
+      return false;
+    }
+
+    public override int GetHashCode()
+    {
+      return HashCode.Combine(x, y);
+    }
   }
 }

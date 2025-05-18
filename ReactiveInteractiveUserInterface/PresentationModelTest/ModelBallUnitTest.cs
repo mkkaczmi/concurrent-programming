@@ -46,9 +46,30 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
     {
       public event EventHandler<IPosition>? NewPositionNotification;
 
+      public IPosition CurrentPosition { get; } = new PositionFixture(0, 0);
+
+      public double Diameter => BusinessLogicAbstractAPI.GetDimensions.BallDimension;
+
+      public void UpdatePosition(IPosition newPosition)
+      {
+        NewPositionNotification?.Invoke(this, newPosition);
+      }
+
       public void Dispose()
       {
         throw new NotImplementedException();
+      }
+    }
+
+    private class PositionFixture : IPosition
+    {
+      public double x { get; init; }
+      public double y { get; init; }
+
+      public PositionFixture(double x, double y)
+      {
+        this.x = x;
+        this.y = y;
       }
     }
 

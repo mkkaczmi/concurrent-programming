@@ -91,6 +91,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
       {
         Observer?.Dispose();
         ModelLayer.Dispose();
+        Balls.Clear();
         Disposed = true;
       }
     }
