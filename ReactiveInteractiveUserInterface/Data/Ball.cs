@@ -8,16 +8,18 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System;
+
 namespace TP.ConcurrentProgramming.Data
 {
     internal class Ball : IBall
     {
         #region ctor
 
-        internal Ball(Vector initialPosition, Vector initialVelocity)
+        internal Ball(IVector initialPosition, IVector initialVelocity)
         {
-            Position = initialPosition;
-            Velocity = initialVelocity;
+            position = initialPosition;
+            velocity = initialVelocity;
         }
 
         #endregion ctor
@@ -26,23 +28,28 @@ namespace TP.ConcurrentProgramming.Data
 
         public event EventHandler<IVector>? NewPositionNotification;
 
-        public IVector Velocity { get; set; }
+        public IVector Velocity
+        {
+            get => velocity;
+            set => velocity = value;
+        }
 
         #endregion IBall
 
         #region private
 
-        private Vector Position;
+        private IVector position;
+        private IVector velocity;
 
         private void RaiseNewPositionChangeNotification()
         {
-            NewPositionNotification?.Invoke(this, Position);
+            NewPositionNotification?.Invoke(this, position);
         }
 
-        internal void Move(Vector delta)
+        internal void Move(IVector delta)
         {
-            Position = new Vector(Position.x + delta.x, Position.y + delta.y);
-            Velocity = Position; // Update velocity to match position for boundary checking
+            position = new Vector(position.x + delta.x, position.y + delta.y);
+            velocity = position; // Update velocity to match position for boundary checking
             RaiseNewPositionChangeNotification();
         }
 

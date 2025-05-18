@@ -13,7 +13,8 @@
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Number of Balls:" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <TextBox x:Name="BallCountTextBox" Width="50" Text="5" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <Button Content="Start" Click="StartButton_Click" Padding="10,5"/>
+            <Button Content="Start" Command="{Binding StartCommand}" CommandParameter="{Binding Text, ElementName=BallCountTextBox}" Padding="10,5" Margin="0,0,10,0"/>
+            <Button Content="Stop" Command="{Binding StopCommand}" Padding="10,5"/>
         </StackPanel>
         <Border BorderThickness="4" BorderBrush="Green" Height="420" Width="400">
             <ItemsControl ItemsSource="{Binding Balls}">

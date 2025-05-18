@@ -23,19 +23,6 @@ namespace TP.ConcurrentProgramming.PresentationView
       InitializeComponent();
     }
 
-    private void StartButton_Click(object sender, RoutedEventArgs e)
-    {
-      if (int.TryParse(BallCountTextBox.Text, out int numberOfBalls) && numberOfBalls > 0)
-      {
-        MainWindowViewModel viewModel = (MainWindowViewModel)DataContext;
-        viewModel.Start(numberOfBalls);
-      }
-      else
-      {
-        MessageBox.Show("Please enter a valid number of balls (greater than 0).", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
-      }
-    }
-
     /// <summary>
     /// Raises the <seealso cref="System.Windows.Window.Closed"/> event.
     /// </summary>

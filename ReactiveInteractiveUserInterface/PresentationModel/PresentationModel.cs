@@ -41,12 +41,28 @@ namespace TP.ConcurrentProgramming.Presentation.Model
 
     public override IDisposable Subscribe(IObserver<IBall> observer)
     {
+      if (Disposed)
+        throw new ObjectDisposedException(nameof(Model));
+      if (eventObservable == null)
+      {
+        eventObservable = Observable.FromEventPattern<BallChaneEventArgs>(this, "BallChanged");
+      }
       return eventObservable.Subscribe(x => observer.OnNext(x.EventArgs.Ball), ex => observer.OnError(ex), () => observer.OnCompleted());
     }
 
     public override void Start(int numberOfBalls)
     {
+      if (Disposed)
+        throw new ObjectDisposedException(nameof(Model));
       layerBellow.Start(numberOfBalls, StartHandler);
+    }
+
+    public override void Stop()
+    {
+      if (Disposed)
+        throw new ObjectDisposedException(nameof(Model));
+      layerBellow.Stop();
+      // Don't set eventObservable to null as it might be needed for future subscriptions
     }
 
     #endregion ModelAbstractApi
@@ -60,7 +76,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model
     #region private
 
     private bool Disposed = false;
-    private readonly IObservable<EventPattern<BallChaneEventArgs>> eventObservable = null;
+    private IObservable<EventPattern<BallChaneEventArgs>> eventObservable = null;
     private readonly UnderneathLayerAPI layerBellow = null;
 
     private void StartHandler(BusinessLogic.IPosition position, BusinessLogic.IBall ball)

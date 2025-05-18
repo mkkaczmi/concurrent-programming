@@ -23,7 +23,11 @@ namespace TP.ConcurrentProgramming.Data
 
     #region public API
 
+    public static readonly Dimensions GetDimensions = new(20.0, 400.0, 400.0);
+
     public abstract void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler);
+
+    public abstract void Stop();
 
     #endregion public API
 
@@ -39,6 +43,8 @@ namespace TP.ConcurrentProgramming.Data
 
     #endregion private
   }
+
+  public record Dimensions(double BallDimension, double TableHeight, double TableWidth);
 
   public interface IVector
   {

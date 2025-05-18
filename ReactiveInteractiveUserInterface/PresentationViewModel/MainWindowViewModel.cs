@@ -9,26 +9,54 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using TP.ConcurrentProgramming.Presentation.Model;
 using TP.ConcurrentProgramming.Presentation.ViewModel.MVVMLight;
 using ModelIBall = TP.ConcurrentProgramming.Presentation.Model.IBall;
 
 namespace TP.ConcurrentProgramming.Presentation.ViewModel
 {
-  public class MainWindowViewModel : ViewModelBase, IDisposable
+  public class MainWindowViewModel : IDisposable
   {
     #region ctor
 
     public MainWindowViewModel() : this(null)
-    { }
-
-    internal MainWindowViewModel(ModelAbstractApi modelLayerAPI)
     {
-      ModelLayer = modelLayerAPI == null ? ModelAbstractApi.CreateModel() : modelLayerAPI;
+    }
+
+    public MainWindowViewModel(ModelAbstractApi? modelLayerAPI)
+    {
+      ModelLayer = modelLayerAPI ?? ModelAbstractApi.CreateModel();
       Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
+      StartCommand = new RelayCommand<string>(ExecuteStart);
+      StopCommand = new RelayCommand(ExecuteStop);
     }
 
     #endregion ctor
+
+    #region Commands
+
+    public ICommand StartCommand { get; }
+    public ICommand StopCommand { get; }
+
+    private void ExecuteStart(string ballCountText)
+    {
+      if (int.TryParse(ballCountText, out int numberOfBalls) && numberOfBalls > 0)
+      {
+        Start(numberOfBalls);
+      }
+      else
+      {
+        System.Windows.MessageBox.Show("Please enter a valid number of balls (greater than 0).", "Invalid Input", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+      }
+    }
+
+    private void ExecuteStop()
+    {
+      Stop();
+    }
+
+    #endregion Commands
 
     #region public API
 
@@ -37,7 +65,18 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
       if (Disposed)
         throw new ObjectDisposedException(nameof(MainWindowViewModel));
       ModelLayer.Start(numberOfBalls);
-      Observer.Dispose();
+    }
+
+    public void Stop()
+    {
+      if (Disposed)
+        throw new ObjectDisposedException(nameof(MainWindowViewModel));
+      ModelLayer.Stop();
+      Balls.Clear();
+      // Dispose the current observer
+      Observer?.Dispose();
+      // Create a new observer for the next start
+      Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
     }
 
     public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
@@ -46,38 +85,23 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
 
     #region IDisposable
 
-    protected virtual void Dispose(bool disposing)
+    public void Dispose()
     {
       if (!Disposed)
       {
-        if (disposing)
-        {
-          Balls.Clear();
-          Observer.Dispose();
-          ModelLayer.Dispose();
-        }
-
-        // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-        // TODO: set large fields to null
+        Observer?.Dispose();
+        ModelLayer.Dispose();
         Disposed = true;
       }
-    }
-
-    public void Dispose()
-    {
-      if (Disposed)
-        throw new ObjectDisposedException(nameof(MainWindowViewModel));
-      Dispose(disposing: true);
-      GC.SuppressFinalize(this);
     }
 
     #endregion IDisposable
 
     #region private
 
-    private IDisposable Observer = null;
-    private ModelAbstractApi ModelLayer;
     private bool Disposed = false;
+    private readonly ModelAbstractApi ModelLayer;
+    private IDisposable? Observer;
 
     #endregion private
   }

@@ -27,6 +27,8 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 
     public abstract void Start(int numberOfBalls, Action<IPosition, IBall> upperLayerHandler);
 
+    public abstract void Stop();
+
     #region IDisposable
 
     public abstract void Dispose();
@@ -58,8 +60,11 @@ namespace TP.ConcurrentProgramming.BusinessLogic
     double y { get; init; }
   }
 
-  public interface IBall 
+  public interface IBall : IDisposable
   {
     event EventHandler<IPosition> NewPositionNotification;
+    IPosition CurrentPosition { get; }
+    double Diameter { get; }
+    void UpdatePosition(IPosition newPosition);
   }
 }

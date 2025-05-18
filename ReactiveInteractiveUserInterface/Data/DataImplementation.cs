@@ -32,14 +32,27 @@ namespace TP.ConcurrentProgramming.Data
                 throw new ObjectDisposedException(nameof(DataImplementation));
             if (upperLayerHandler == null)
                 throw new ArgumentNullException(nameof(upperLayerHandler));
+
+            // Ensure the timer is running
+            MoveTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+
             Random random = new Random();
             for (int i = 0; i < numberOfBalls; i++)
             {
-                Vector startingPosition = new(random.Next(100, 400 - 100), random.Next(100, 400 - 100));
-                Ball newBall = new(startingPosition, startingPosition);
-                upperLayerHandler(startingPosition, newBall);
-                BallsList.Add(newBall);
+                IVector startingPosition = new Vector(random.Next(0, (int)GetDimensions.TableWidth), random.Next(0, (int)GetDimensions.TableHeight));
+                IVector initialVelocity = new Vector(random.NextDouble() * 2 - 1, random.NextDouble() * 2 - 1);
+                IBall ball = new Ball(startingPosition, initialVelocity);
+                BallsList.Add((Ball)ball);
+                upperLayerHandler(startingPosition, ball);
             }
+        }
+
+        public override void Stop()
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(nameof(DataImplementation));
+            MoveTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            BallsList.Clear();
         }
 
         #endregion DataAbstractAPI

@@ -14,7 +14,7 @@ namespace TP.ConcurrentProgramming.Data
   /// <summary>
   ///  Two dimensions immutable vector
   /// </summary>
-  internal record Vector : IVector
+  internal class Vector : IVector
   {
     #region IVector
 
@@ -32,10 +32,10 @@ namespace TP.ConcurrentProgramming.Data
     /// <summary>
     /// Creates new instance of <seealso cref="Vector"/> and initialize all properties
     /// </summary>
-    public Vector(double XComponent, double YComponent)
+    public Vector(double x, double y)
     {
-      x = XComponent;
-      y = YComponent;
+      this.x = x;
+      this.y = y;
     }
   }
 }
