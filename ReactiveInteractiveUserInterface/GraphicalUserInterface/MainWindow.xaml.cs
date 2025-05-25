@@ -27,11 +27,12 @@ namespace TP.ConcurrentProgramming.PresentationView
 
     private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-      // Update box dimensions when window is resized
-      // Leave some margin for the border
-      double boxWidth = Math.Max(100, e.NewSize.Width - 40);
-      double boxHeight = Math.Max(100, e.NewSize.Height - 100);
-      DataAbstractAPI.GetDataLayer().UpdateBoxDimensions(boxWidth, boxHeight);
+      // Calculate the minimum dimension to maintain square aspect ratio
+      double minDimension = Math.Min(e.NewSize.Width - 40, e.NewSize.Height - 100);
+      // Ensure minimum size of 100
+      double boxSize = Math.Max(100, minDimension);
+      // Update box dimensions with equal width and height
+      DataAbstractAPI.GetDataLayer().UpdateBoxDimensions(boxSize, boxSize);
     }
 
     /// <summary>
