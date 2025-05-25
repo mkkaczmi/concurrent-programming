@@ -10,6 +10,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace TP.ConcurrentProgramming.Data
 {
@@ -34,7 +35,7 @@ namespace TP.ConcurrentProgramming.Data
                 throw new ArgumentNullException(nameof(upperLayerHandler));
 
             // Ensure the timer is running
-            MoveTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(50));
+            MoveTimer.Change(TimeSpan.Zero, TimeSpan.FromMilliseconds(16)); // ~60 FPS for smoother animation
 
             Random random = new Random();
             for (int i = 0; i < numberOfBalls; i++)
@@ -42,6 +43,7 @@ namespace TP.ConcurrentProgramming.Data
                 IVector startingPosition = new Vector(random.Next(0, (int)GetDimensions.TableWidth), random.Next(0, (int)GetDimensions.TableHeight));
                 IVector initialVelocity = new Vector((random.NextDouble() * 4 - 2) * 2, (random.NextDouble() * 4 - 2) * 2);
                 IBall ball = new Ball(startingPosition, initialVelocity);
+                ball.Mass = random.NextDouble() * 2 + 1; // Random mass between 1 and 3
                 BallsList.Add((Ball)ball);
                 upperLayerHandler(startingPosition, ball);
             }
@@ -101,17 +103,28 @@ namespace TP.ConcurrentProgramming.Data
         private double boxHeight = 400;
         private const double GRAVITY = 0.0; // No gravity as per requirements
         private const double FRICTION = 0.0; // No friction as per requirements
+        private readonly SemaphoreSlim _moveLock = new SemaphoreSlim(1, 1);
 
-        private void Move(object? x)
+        private async void Move(object? x)
         {
-            // First, update positions and handle wall collisions
-            foreach (Ball ball in BallsList)
-            {
-                UpdateBallPosition(ball);
-            }
+            if (!await _moveLock.WaitAsync(0)) // Try to acquire lock without waiting
+                return;
 
-            // Then handle ball-to-ball collisions
-            HandleBallCollisions();
+            try
+            {
+                // First, update positions and handle wall collisions
+                foreach (Ball ball in BallsList)
+                {
+                    UpdateBallPosition(ball);
+                }
+
+                // Then handle ball-to-ball collisions
+                HandleBallCollisions();
+            }
+            finally
+            {
+                _moveLock.Release();
+            }
         }
 
         private void UpdateBallPosition(Ball ball)
@@ -172,9 +185,18 @@ namespace TP.ConcurrentProgramming.Data
                     double minDistance = GetDimensions.BallDimension;
 
                     // Check if balls are colliding
-                    if (distanceSquared < minDistance * minDistance)
+                    if (distanceSquared <= minDistance * minDistance)
                     {
                         double distance = Math.Sqrt(distanceSquared);
+
+                        // Prevent division by zero
+                        if (distance < 0.0001)
+                        {
+                            // If balls are too close, move them apart slightly
+                            ball1.Move(new Vector(-0.1, 0));
+                            ball2.Move(new Vector(0.1, 0));
+                            continue;
+                        }
 
                         // Normalize collision vector
                         double nx = dx / distance;
@@ -191,28 +213,37 @@ namespace TP.ConcurrentProgramming.Data
                         if (velocityAlongNormal > 0)
                             continue;
 
-                        // Calculate impulse scalar with mass consideration
-                        double restitution = 1.0; // Perfectly elastic collision
-                        double mass1 = ball1.Mass;
-                        double mass2 = ball2.Mass;
-                        double totalMass = mass1 + mass2;
-                        
-                        // Calculate impulse scalar using conservation of momentum and energy
-                        double impulseScalar = -(1 + restitution) * velocityAlongNormal * (mass1 * mass2) / totalMass;
+                        // For equal masses, simply exchange velocities
+                        if (Math.Abs(ball1.Mass - ball2.Mass) < 0.0001)
+                        {
+                            ball1.Velocity = vel2;
+                            ball2.Velocity = vel1;
+                        }
+                        else
+                        {
+                            // Calculate impulse scalar with mass consideration
+                            double restitution = 1.0; // Perfectly elastic collision
+                            double mass1 = ball1.Mass;
+                            double mass2 = ball2.Mass;
+                            double totalMass = mass1 + mass2;
+                            
+                            // Calculate impulse scalar using conservation of momentum and energy
+                            double impulseScalar = -(1 + restitution) * velocityAlongNormal * (mass1 * mass2) / totalMass;
 
-                        // Apply impulse with mass consideration
-                        Vector newVel1 = new Vector(
-                            vel1.x - (impulseScalar * nx) / mass1,
-                            vel1.y - (impulseScalar * ny) / mass1
-                        );
-                        Vector newVel2 = new Vector(
-                            vel2.x + (impulseScalar * nx) / mass2,
-                            vel2.y + (impulseScalar * ny) / mass2
-                        );
+                            // Apply impulse with mass consideration
+                            Vector newVel1 = new Vector(
+                                vel1.x - (impulseScalar * nx) / mass1,
+                                vel1.y - (impulseScalar * ny) / mass1
+                            );
+                            Vector newVel2 = new Vector(
+                                vel2.x + (impulseScalar * nx) / mass2,
+                                vel2.y + (impulseScalar * ny) / mass2
+                            );
 
-                        // Update velocities
-                        ball1.Velocity = newVel1;
-                        ball2.Velocity = newVel2;
+                            // Update velocities
+                            ball1.Velocity = newVel1;
+                            ball2.Velocity = newVel2;
+                        }
 
                         // Move balls apart to prevent sticking
                         double overlap = minDistance - distance;
@@ -235,6 +266,23 @@ namespace TP.ConcurrentProgramming.Data
         internal void CheckBallsList(Action<IEnumerable<IBall>> returnBallsList)
         {
             returnBallsList(BallsList);
+        }
+
+        internal void AddBall(Ball ball)
+        {
+            BallsList.Add(ball);
+        }
+
+        internal void SimulateOneFrame()
+        {
+            // First, update positions and handle wall collisions
+            foreach (Ball ball in BallsList)
+            {
+                UpdateBallPosition(ball);
+            }
+
+            // Then handle ball-to-ball collisions
+            HandleBallCollisions();
         }
 
         [Conditional("DEBUG")]
