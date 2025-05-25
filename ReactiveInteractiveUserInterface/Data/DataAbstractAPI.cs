@@ -67,5 +67,6 @@ namespace TP.ConcurrentProgramming.Data
 
     IVector Velocity { get; set; }
     IVector Position { get; }
+    double Mass { get; set; }
   }
 }

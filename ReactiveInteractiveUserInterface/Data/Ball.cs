@@ -20,6 +20,7 @@ namespace TP.ConcurrentProgramming.Data
         {
             position = initialPosition;
             velocity = initialVelocity;
+            mass = 1.0; // Default mass
         }
 
         #endregion ctor
@@ -36,12 +37,19 @@ namespace TP.ConcurrentProgramming.Data
 
         public IVector Position => position;
 
+        public double Mass
+        {
+            get => mass;
+            set => mass = value;
+        }
+
         #endregion IBall
 
         #region private
 
         private IVector position;
         private IVector velocity;
+        private double mass;
 
         private void RaiseNewPositionChangeNotification()
         {
